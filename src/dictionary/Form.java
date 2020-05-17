@@ -5,11 +5,22 @@
  */
 package dictionary;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import javafx.print.Collation;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -17,6 +28,77 @@ import javafx.print.Collation;
  */
 public class Form extends javax.swing.JFrame {
 
+    static ArrayList<String> table = new ArrayList<>();
+    static ArrayList<Integer> code = new ArrayList<>();
+       
+    private static void encoding(char[] s) 
+	{
+		/* Initialize Starting Table */
+		table.add(Character.toString(s[0]));
+		
+		for(int i=1; i<s.length; i++)
+		{
+			String toBeCompared = Character.toString(s[i]);
+			if( !table.contains(toBeCompared)) table.add(toBeCompared); 
+		}
+		
+		/* ENCODING */
+		int i=0;
+		while(i<s.length)
+		{
+			StringBuilder sb = new StringBuilder();
+			if(i+1<s.length)
+			{
+				// Add new letter to the current letter
+				sb.append(charToStr(s[i])).append(charToStr(s[++i]));
+				
+				/*
+				 *	If the new combination is not in the table:
+				 * 	1) Code the new combination of letters
+				 * 	2) Add the new combination of letters to the table
+				*/
+				if( !table.contains(sb.toString())) 
+				{
+					code.add(table.indexOf(charToStr(s[i-1]))+1);
+					table.add(sb.toString());
+				}
+				/*
+				 * If the combination ( sb ) exists in the table:
+				 * 	- Add new letter to the combination
+				 * 	- Continue checking if the combination exists
+				 * 	until you find new combination or you get to the end
+				 */
+				else
+				{
+					String temp = "";
+					while(table.contains(sb.toString()))
+					{
+						temp = sb.toString();
+						i++;
+						if(i<s.length)sb.append(charToStr(s[i]));
+						else break;
+					}
+					
+					code.add(table.indexOf(temp)+1);
+					if( !table.contains(sb.toString()))
+					{
+						table.add(sb.toString());
+					}
+							
+				}
+				
+			}
+			else break;
+			
+		}
+		/* ENCODING END */
+	}
+
+	/* Convert char to String */
+	private static String charToStr(char c)
+	{
+		return Character.toString(c);
+	}
     /**
      * Creates new form Form
      */
@@ -97,16 +179,23 @@ public class Form extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         
-        String kata = "wabbaBwabbaBwabbaBwabbaBwooBwooBwoo";
-        int len = kata.length();
-        String[] huruf = kata.split("");
         
-        Set<String> dic = new LinkedHashSet<String>(Arrays.asList(huruf));
-        
-//        Collections.sort(dic);
-        
-        System.out.println(dic);
-        
+		String kalimat = this.input.getText();
+		char[] sequence = kalimat.toCharArray();
+		
+		encoding(sequence);
+				
+		output.setText("Table: ");
+		for(String s : table) output.append(table.indexOf(s)+1 + ": " + s);
+		
+		output.append("\nEncoded sequnce: ");
+		for(Integer c : code) output.append(c+" ");
+
+		/* Calculating compression percent */
+		double ratio = ((double)sequence.length - (double)code.size())/(double)sequence.length;
+		output.append("\n" + "Compression : " + (float)ratio*100 + " %");
+	
+			
         
     }//GEN-LAST:event_jButton1ActionPerformed
 
